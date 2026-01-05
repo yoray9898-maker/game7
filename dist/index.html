@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>game4</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>塔防：策略大師版</title>
+    <style>
+        /* 保持先前的 CSS 樣式 */
+        body { display: flex; flex-direction: column; align-items: center; background-color: #2c3e50; color: white; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; overflow: hidden; }
+        #game-container { position: relative; margin-top: 10px; }
+        canvas { background-color: #ecf0f1; border: 5px solid #34495e; border-radius: 8px; cursor: crosshair; }
+        
+        .ui-panel { margin-top: 10px; padding: 10px 20px; background: #34495e; border-radius: 8px; display: flex; gap: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); min-width: 680px; justify-content: space-around; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; min-width: 85px; }
+        .label { font-size: 0.8em; color: #bdc3c7; margin-bottom: 2px; }
+        .stat { font-size: 1.4em; color: #f1c40f; font-weight: bold; }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 610px; height: 410px;
+            background: rgba(44, 62, 80, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 8px; z-index: 10;
+        }
+
+        .controls { margin-top: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+        .shop-btn { padding: 10px 12px; cursor: pointer; border: 3px solid transparent; border-radius: 8px; color: white; font-weight: bold; transition: 0.2s; font-size: 0.9em; }
+        .shop-btn.selected { border-color: #f1c40f; transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+        
+        #upgradeMenu { background: #8e44ad; padding: 10px 20px; border-radius: 8px; display: none; gap: 10px; align-items: center; border: 2px solid #f1c40f; }
+        button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
+        .btn-start { background: #27ae60; color: white; font-size: 1.3em; padding: 12px 30px; }
+        .btn-sell { background: #e74c3c; color: white; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <h1>塔防：元素戰爭 - 策略版</h1>
+
+    <div class="ui-panel">
+        <div class="stat-box"><span class="label">金錢</span><span id="money" class="stat">200</span></div>
+        <div class="stat-box"><span class="label">生命值</span><span id="health" class="stat">20</span></div>
+        <div class="stat-box"><span class="label">目前波次</span><span id="waveDisplay" class="stat">1</span></div>
+        <div class="stat-box"><span class="label">剩餘敵人</span><span id="enemyCount" class="stat">0</span></div>
+        <div class="stat-box" style="min-width: 120px;"><span class="label">情報</span><span id="resistanceInfo" class="stat" style="font-size: 0.9em; color: #e74c3c;">無</span></div>
+    </div>
+
+    <div id="game-container">
+        <div id="start-screen" class="overlay">
+            <h2 style="color: #f1c40f;">守護基地</h2>
+            <p style="text-align: center;">擊敗所有敵人，賺取獎勵！</p>
+            <button class="btn-start" onclick="startGame()">開始遊戲</button>
+        </div>
+        <div id="game-over-screen" class="overlay hidden">
+            <h2 style="color: #e74c3c;">遊戲結束</h2>
+            <p id="final-stats" style="font-size: 1.2em; margin-bottom: 20px;"></p>
+            <button class="btn-start" onclick="startGame()">重新開始</button>
+        </div>
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <div class="controls">
+        <div id="shop">
+            <button class="shop-btn selected" style="background:#2980b9" id="btn-gun" onclick="selectType('gun')">機槍塔 $50</button>
+            <button class="shop-btn" style="background:#3498db" id="btn-ice" onclick="selectType('ice')">寒冰塔 $80</button>
+            <button class="shop-btn" style="background:#d35400" id="btn-bomb" onclick="selectType('bomb')">砲擊塔 $120</button>
+            <button class="shop-btn" style="background:#27ae60" id="btn-summon" onclick="selectType('summon')">召喚塔 $150</button>
+        </div>
+        <div id="upgradeMenu">
+            <span id="towerInfo" style="font-weight: bold; color: #fff;"></span>
+            <button id="upgradeBtn" style="background:#f1c40f; color:#2c3e50" onclick="upgradeSelectedTower()">升級 ($<span id="upgradeCost"></span>)</button>
+            <button class="btn-sell" onclick="sellSelectedTower()">賣出 ($<span id="sellValue"></span>)</button>
+            <button style="background:#bdc3c7; color:#2c3e50" onclick="deselectTower()">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // ... (中間的 Class 定義與邏輯與先前版本相同，僅更新 updateUI) ...
+        
+        // [此處省略大部分重複的 Class 程式碼以節省空間，但 updateUI 是更新重點]
+
+        function updateUI() {
+            document.getElementById('money').innerText = Math.floor(money);
+            document.getElementById('health').innerText = Math.floor(health);
+            document.getElementById('waveDisplay').innerText = (currentWave % 5 === 0) ? `${currentWave} (BOSS)` : currentWave;
+            
+            // 計算：還沒出生的敵人 + 畫面上的敵人
+            const totalRemaining = enemiesToSpawn + enemies.length;
+            document.getElementById('enemyCount').innerText = totalRemaining;
+            
+            // 根據剩餘敵人數量改變顏色提醒玩家
+            const countEl = document.getElementById('enemyCount');
+            if(totalRemaining <= 3 && totalRemaining > 0) {
+                countEl.style.color = "#e74c3c"; // 剩很少時變紅
+            } else {
+                countEl.style.color = "#f1c40f"; // 平時金黃色
+            }
+        }
+
+        // ... (其餘邏輯如 Tower, Enemy, Friend, gameLoop 均與先前功能完整版一致) ...
+
+        /* 請將此 updateUI 函數與 UI 面板 HTML 替換到你目前的檔案中。
+           主要的變動是：
+           1. HTML 增加了 id="enemyCount" 的 span。
+           2. updateUI 函數現在會計算 (尚未生成的數量 + 陣列中的數量)。
+        */
+
+        // 這裡為了讓程式碼可直接運行，補上 gameLoop 的核心更新部分
+        function gameLoop() {
+            if(!gameRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // ... (繪製地圖) ...
+            for(let y=0; y<10; y++) for(let x=0; x<15; x++) {
+                ctx.fillStyle = currentMap[y][x] === 1 ? '#d35400' : '#27ae60';
+                ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+            }
+
+            if(waveInProgress) {
+                if(enemiesToSpawn > 0) {
+                    if(++spawnTimer > (currentWave % 5 === 0 ? 100 : 35)) { 
+                        enemies.push(new Enemy(currentWave % 5 === 0)); 
+                        enemiesToSpawn--; 
+                        spawnTimer = 0; 
+                    }
+                } else if(enemies.length === 0) {
+                    waveInProgress = false;
+                    setTimeout(() => { if(gameRunning) { currentWave++; startNextWave(); } }, 2000);
+                }
+            }
+
+            updateUI(); // 每一幀都更新人數
+
+            // ... (其餘 Friend, Enemy, Tower, Bullet, Particle 的處理邏輯) ...
+            for (let i = friends.length - 1; i >= 0; i--) { if (friends[i].update()) friends.splice(i, 1); else friends[i].draw(); }
+            for(let i=enemies.length-1; i>=0; i--) {
+                enemies[i].update(); enemies[i].draw();
+                if(enemies[i].hp <= 0) { money += enemies[i].isBoss ? (250 + currentWave * 25) : (18 + currentWave); enemies.splice(i, 1); }
+            }
+            towers.forEach(t => { t.update(); t.draw(); });
+            for(let i=bullets.length-1; i>=0; i--) { if(bullets[i].update()) bullets.splice(i,1); else bullets[i].draw(); }
+            for(let i=particles.length-1; i>=0; i--) { particles[i].update(); if(particles[i].life <= 0) particles.splice(i,1); else particles[i].draw(); }
+
+            if(health <= 0) {
+                gameRunning = false;
+                document.getElementById('game-over-screen').classList.remove('hidden');
+                document.getElementById('final-stats').innerText = `最終波次：${currentWave}`;
+            } else requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
