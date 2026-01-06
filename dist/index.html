@@ -2,49 +2,47 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>塔防：元素戰爭 - 三圖整合版</title>
+    <title>塔防：元素戰爭 - 最終整合版</title>
     <style>
         body { display: flex; flex-direction: column; align-items: center; background-color: #2c3e50; color: white; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; overflow: hidden; }
         #game-container { position: relative; margin-top: 10px; }
         canvas { background-color: #ecf0f1; border: 5px solid #34495e; border-radius: 8px; cursor: crosshair; }
         
-        /* UI 面板 */
         .ui-panel { margin-top: 10px; padding: 10px 20px; background: #34495e; border-radius: 8px; display: flex; gap: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); min-width: 700px; justify-content: space-around; }
         .stat-box { display: flex; flex-direction: column; align-items: center; min-width: 85px; }
-        .label { font-size: 0.8em; color: #bdc3c7; }
+        .label { font-size: 0.8em; color: #bdc3c7; margin-bottom: 2px; }
         .stat { font-size: 1.4em; color: #f1c40f; font-weight: bold; }
 
-        /* BOSS 血條 */
         #boss-hp-container {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            width: 350px; height: 20px; background: rgba(0,0,0,0.6);
-            border: 2px solid #fff; border-radius: 10px; display: none; overflow: hidden; z-index: 5;
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 400px; height: 25px; background: rgba(0,0,0,0.6);
+            border: 2px solid #fff; border-radius: 5px; display: none; z-index: 5;
         }
         #boss-hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.2s; }
-        #boss-hp-text { position: absolute; width: 100%; text-align: center; line-height: 20px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+        #boss-hp-text { position: absolute; width: 100%; text-align: center; line-height: 25px; font-weight: bold; font-size: 0.9em; text-shadow: 1px 1px 2px #000; }
 
-        /* 選單與覆蓋層 */
         .overlay {
             position: absolute; top: 0; left: 0; width: 610px; height: 410px;
             background: rgba(44, 62, 80, 0.95);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             border-radius: 8px; z-index: 10;
         }
-        .btn-choice { 
-            width: 280px; padding: 12px; margin: 8px; cursor: pointer; border: none; 
-            border-radius: 8px; color: white; font-weight: bold; font-size: 1em; transition: 0.2s;
-        }
-        .btn-choice:hover { transform: scale(1.05); filter: brightness(1.2); }
+
+        /* 恢復原本的難度按鈕樣式 */
+        .difficulty-options, .map-options { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; width: 350px; }
+        .btn-choice { font-size: 1em; padding: 12px; color: white; border-radius: 8px; text-align: center; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
+        .btn-choice:hover { transform: scale(1.02); filter: brightness(1.1); }
         
         .easy { background: #27ae60; }
         .normal { background: #2980b9; }
-        .hard { background: #c0392b; }
-        .map-btn { background: #8e44ad; border: 1px solid #fff; }
+        .hard { background: #c0392b; border: 2px solid #f1c40f; }
+        .map-btn { background: #8e44ad; border: 2px solid #fff; }
 
-        .controls { margin-top: 15px; display: flex; gap: 10px; }
-        .shop-btn { padding: 10px 15px; cursor: pointer; border: 3px solid transparent; border-radius: 8px; color: white; font-weight: bold; }
-        .shop-btn.selected { border-color: #f1c40f; }
-        #upgradeMenu { background: #8e44ad; padding: 10px; border-radius: 8px; display: none; gap: 10px; align-items: center; }
+        .controls { margin-top: 15px; display: flex; gap: 10px; align-items: center; }
+        .shop-btn { padding: 10px 12px; cursor: pointer; border: 3px solid transparent; border-radius: 8px; color: white; font-weight: bold; transition: 0.2s; }
+        .shop-btn.selected { border-color: #f1c40f; transform: translateY(-3px); }
+        
+        #upgradeMenu { background: #8e44ad; padding: 10px 20px; border-radius: 8px; display: none; gap: 10px; align-items: center; border: 2px solid #f1c40f; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -55,34 +53,38 @@
     <div class="ui-panel">
         <div class="stat-box"><span class="label">金錢</span><span id="money" class="stat">200</span></div>
         <div class="stat-box"><span class="label">生命值</span><span id="health" class="stat">20</span></div>
-        <div class="stat-box"><span class="label">波次</span><span id="waveDisplay" class="stat">1</span></div>
-        <div class="stat-box"><span class="label">情報</span><span id="difficultyInfo" class="stat" style="font-size: 0.8em;">未選擇</span></div>
+        <div class="stat-box"><span class="label">目前波次</span><span id="waveDisplay" class="stat">1</span></div>
+        <div class="stat-box"><span class="label">難度/地圖</span><span id="difficultyInfo" class="stat" style="font-size: 0.85em; color: #f1c40f;">未選擇</span></div>
     </div>
 
     <div id="game-container">
         <div id="boss-hp-container">
             <div id="boss-hp-fill"></div>
-            <div id="boss-hp-text">BOSS HP</div>
+            <div id="boss-hp-text">BOSS 出現！</div>
         </div>
 
         <div id="difficulty-screen" class="overlay">
-            <h2 style="color: #f1c40f;">選擇難度</h2>
-            <button class="btn-choice easy" onclick="pickDifficulty(1.25, '簡單')">簡單 (成長 25%)</button>
-            <button class="btn-choice normal" onclick="pickDifficulty(1.30, '普通')">普通 (成長 30%)</button>
-            <button class="btn-choice hard" onclick="pickDifficulty(1.40, '困難')">困難 (成長 40%)</button>
+            <h2 style="color: #f1c40f;">選擇挑戰難度</h2>
+            <div class="difficulty-options">
+                <button class="btn-choice easy" onclick="pickDifficulty(1.25, '簡單')">簡單：每波敵人血量增加 25%</button>
+                <button class="btn-choice normal" onclick="pickDifficulty(1.30, '普通')">普通：每波敵人血量增加 30%</button>
+                <button class="btn-choice hard" onclick="pickDifficulty(1.40, '困難')">困難：每波敵人血量增加 40%</button>
+            </div>
         </div>
 
         <div id="map-screen" class="overlay hidden">
-            <h2 style="color: #f1c40f;">選擇地圖佈局</h2>
-            <button class="btn-choice map-btn" onclick="pickMap(0)">地圖 A：經典 S 型</button>
-            <button class="btn-choice map-btn" onclick="pickMap(1)">地圖 B：大迴旋 U 型</button>
-            <button class="btn-choice map-btn" onclick="pickMap(2)">地圖 C：雙十字轉折</button>
+            <h2 style="color: #f1c40f;">選擇戰場地圖</h2>
+            <div class="map-options">
+                <button class="btn-choice map-btn" onclick="pickMap(0)">地圖 A：經典 S 型 (路徑長且平均)</button>
+                <button class="btn-choice map-btn" onclick="pickMap(1)">地圖 B：大迴旋 U 型 (適合中心集火)</button>
+                <button class="btn-choice map-btn" onclick="pickMap(2)">地圖 C：雙十字路口 (轉折急促)</button>
+            </div>
         </div>
 
         <div id="game-over-screen" class="overlay hidden">
             <h2 style="color: #EA0000;">戰地失守</h2>
-            <p id="final-stats"></p>
-            <button class="btn-choice easy" onclick="location.reload()">重新開始</button>
+            <p id="final-stats" style="font-size: 1.2em; margin-bottom: 20px;"></p>
+            <button class="btn-choice easy" onclick="location.reload()">重新開始遊戲</button>
         </div>
 
         <canvas id="gameCanvas" width="600" height="400"></canvas>
@@ -90,16 +92,16 @@
 
     <div class="controls">
         <div id="shop">
-            <button class="shop-btn selected" style="background:#2980b9" onclick="selectType('gun', this)">機槍塔 $50</button>
-            <button class="shop-btn" style="background:#3498db" onclick="selectType('ice', this)">寒冰塔 $80</button>
-            <button class="shop-btn" style="background:#d35400" onclick="selectType('bomb', this)">砲擊塔 $120</button>
-            <button class="shop-btn" style="background:#f1c40f; color:#2c3e50" onclick="selectType('summon', this)">召喚塔 $150</button>
+            <button class="shop-btn selected" style="background:#2980b9" id="btn-gun" onclick="selectType('gun')">機槍塔 $50</button>
+            <button class="shop-btn" style="background:#3498db" id="btn-ice" onclick="selectType('ice')">寒冰塔 $80</button>
+            <button class="shop-btn" style="background:#d35400" id="btn-bomb" onclick="selectType('bomb')">砲擊塔 $120</button>
+            <button class="shop-btn" style="background:#f1c40f; color: #2c3e50;" id="btn-summon" onclick="selectType('summon')">召喚塔 $150</button>
         </div>
         <div id="upgradeMenu">
-            <span id="towerInfo"></span>
-            <button style="background:#f1c40f; padding:5px 10px;" onclick="upgradeSelectedTower()">升級 ($<span id="upgradeCost"></span>)</button>
-            <button style="background:#EA0000; color:white; padding:5px 10px;" onclick="sellSelectedTower()">賣出</button>
-            <button style="background:#bdc3c7; padding:5px 10px;" onclick="deselectTower()">取消</button>
+            <span id="towerInfo" style="font-weight: bold; color: #fff;"></span>
+            <button style="background:#f1c40f; color:#2c3e50; padding: 8px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="upgradeSelectedTower()">升級 ($<span id="upgradeCost"></span>)</button>
+            <button style="background:#EA0000; color:white; padding: 8px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="sellSelectedTower()">賣出</button>
+            <button style="background:#bdc3c7; color:#2c3e50; padding: 8px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="deselectTower()">取消</button>
         </div>
     </div>
 
@@ -127,8 +129,19 @@
         let towers = [], enemies = [], bullets = [], friends = [], particles = [];
         let waveInProgress = false, hpGrowthRate = 1.3, diffName = "", activePath = [], activeLayout = [];
 
-        function pickDifficulty(r, n) { hpGrowthRate = r; diffName = n; document.getElementById('difficulty-screen').classList.add('hidden'); document.getElementById('map-screen').classList.remove('hidden'); }
-        function pickMap(idx) { activePath = mapConfigs[idx].path; activeLayout = mapConfigs[idx].layout.map(row => [...row]); document.getElementById('map-screen').classList.add('hidden'); startGame(idx); }
+        function pickDifficulty(r, n) { 
+            hpGrowthRate = r; 
+            diffName = n; 
+            document.getElementById('difficulty-screen').classList.add('hidden'); 
+            document.getElementById('map-screen').classList.remove('hidden'); 
+        }
+
+        function pickMap(idx) { 
+            activePath = mapConfigs[idx].path; 
+            activeLayout = mapConfigs[idx].layout.map(row => [...row]); 
+            document.getElementById('map-screen').classList.add('hidden'); 
+            startGame(idx); 
+        }
 
         function startGame(idx) {
             money = 200; health = 20; currentWave = 1; gameRunning = true;
@@ -144,22 +157,21 @@
                 this.targetIdx = 1; this.isBoss = isBoss;
                 const gf = Math.pow(hpGrowthRate, currentWave - 1);
                 this.maxHp = Math.floor((isBoss ? 600 : 25) * gf);
-                this.hp = this.maxHp; this.speed = isBoss ? 0.6 : (1.3 + Math.random() * 0.7);
+                this.hp = this.maxHp; 
+                this.speed = isBoss ? 0.6 : (1.3 + Math.random() * 0.7);
                 this.slowTimer = 0;
             }
             update() {
                 let s = (this.slowTimer > 0) ? this.speed * 0.5 : this.speed;
                 if(this.slowTimer > 0) this.slowTimer--;
-                
                 if(this.isBoss) {
                     const bar = document.getElementById('boss-hp-fill');
                     document.getElementById('boss-hp-container').style.display = 'block';
                     const pct = (this.hp / this.maxHp) * 100;
                     bar.style.width = pct + '%';
                     bar.style.backgroundColor = pct < 30 ? '#ff0000' : '#2ecc71';
-                    if(pct < 30) s *= 1.5; // 狂暴
+                    if(pct < 30) s *= 1.5;
                 }
-
                 let t = activePath[this.targetIdx];
                 let dx = t.x * tileSize - this.x, dy = t.y * tileSize - this.y;
                 let d = Math.sqrt(dx*dx + dy*dy);
@@ -181,8 +193,8 @@
             }
             getCost() { return Math.floor(this.upCost * Math.pow(1.6, this.level-1)); }
             upgrade() {
-                money -= this.getCost(); this.totalSpent += this.getCost(); this.level++;
-                const rate = (this.type === 'summon') ? 1.75 : 1.7; // 你要求的成長率
+                const cost = this.getCost(); money -= cost; this.totalSpent += cost; this.level++;
+                const rate = (this.type === 'summon') ? 1.75 : 1.7; 
                 this.damage = Math.floor(this.damage * rate);
                 if(this.type !== 'summon') { this.range += 12; this.cdMax = Math.max(8, Math.floor(this.cdMax*0.85)); }
                 else { this.cdMax = Math.max(250, Math.floor(this.cdMax*0.8)); }
@@ -204,11 +216,10 @@
             }
         }
 
-        // --- 輔助邏輯 ---
         class Bullet { constructor(x,y,t,d,tp){this.x=x;this.y=y;this.t=t;this.d=d;this.tp=tp;} update(){let dx=this.t.x+20-this.x, dy=this.t.y+20-this.y, dist=Math.sqrt(dx*dx+dy*dy); if(dist<10){ if(this.tp==='ice') this.t.slowTimer=60; if(this.tp==='bomb') enemies.forEach(e=>{if(Math.hypot(e.x-this.t.x, e.y-this.t.y)<70)e.hp-=this.d;}); else this.t.hp-=this.d; return true; } this.x+=(dx/dist)*12; this.y+=(dy/dist)*12; return false;} draw(){ctx.fillStyle="#f1c40f"; ctx.beginPath(); ctx.arc(this.x,this.y,3,0,Math.PI*2); ctx.fill();}}
         class Friend { constructor(d){this.x=activePath[activePath.length-1].x*tileSize; this.y=activePath[activePath.length-1].y*tileSize; this.tIdx=activePath.length-2; this.d=d;} update(){let t=activePath[this.tIdx], dx=t.x*tileSize-this.x, dy=t.y*tileSize-this.y, dist=Math.sqrt(dx*dx+dy*dy); if(dist<2){this.tIdx--; if(this.tIdx<0) return true;} else {this.x+=(dx/dist)*2; this.y+=(dy/dist)*2;} for(let e of enemies){if(Math.hypot(this.x-e.x, this.y-e.y)<30){e.hp-=this.d; return true;}} return false;} draw(){ctx.fillStyle="#2ecc71"; ctx.beginPath(); ctx.arc(this.x+20,this.y+20,8,0,Math.PI*2); ctx.fill();}}
         
-        function selectType(t, btn) { currentType = t; document.querySelectorAll('.shop-btn').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); }
+        function selectType(t) { currentType = t; document.querySelectorAll('.shop-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('btn-'+t).classList.add('selected'); }
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             const gx = Math.floor((e.clientX - rect.left)/tileSize), gy = Math.floor((e.clientY-rect.top)/tileSize);
@@ -229,7 +240,7 @@
             bullets = bullets.filter(b=>!b.update()); bullets.forEach(b=>b.draw());
             friends = friends.filter(f=>!f.update()); friends.forEach(f=>f.draw());
             document.getElementById('money').innerText=money; document.getElementById('health').innerText=health; document.getElementById('waveDisplay').innerText=currentWave;
-            if(health<=0){ gameRunning=false; document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('final-stats').innerText=`最終波次：${currentWave}`; }
+            if(health<=0){ gameRunning=false; document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('final-stats').innerText=`難度：${diffName} | 最終波次：${currentWave}`; }
             else requestAnimationFrame(gameLoop);
         }
     </script>
