@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>塔防：元素戰爭 - UI 優化版</title>
+    <title>塔防：元素戰爭 - 狂暴霸體版</title>
     <style>
         body { display: flex; flex-direction: column; align-items: center; background-color: #2c3e50; color: white; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; overflow: hidden; }
         #game-container { position: relative; margin-top: 10px; }
@@ -13,12 +13,8 @@
         .stat { font-size: 1.4em; color: #f1c40f; font-weight: bold; }
         .overlay { position: absolute; top: 0; left: 0; width: 610px; height: 410px; background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; z-index: 10; }
         .controls { margin-top: 25px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; }
-        
-        /* 商店按鈕樣式 */
         .shop-btn { padding: 12px 15px; cursor: pointer; border: 3px solid transparent; border-radius: 10px; color: white; font-weight: bold; transition: all 0.2s ease; font-size: 0.95em; box-shadow: 0 3px 6px rgba(0,0,0,0.3); opacity: 0.6; }
-        /* 只有在遊戲開始且被選中時才套用高亮 */
         .shop-btn.selected { border-color: #f1c40f !important; transform: translateY(-8px); box-shadow: 0 12px 20px rgba(0, 0, 0, 0.6) !important; opacity: 1; }
-        
         #upgradeMenu { background: #8e44ad; padding: 10px 20px; border-radius: 8px; display: none; gap: 10px; align-items: center; border: 2px solid #f1c40f; }
         button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; transition: 0.2s; }
         .btn-sell { background: #EA0000; color: white; }
@@ -86,7 +82,6 @@
         let currentMap = [];
 
         function selectType(t) { 
-            // 只有當遊戲進行中時才允許切換選取狀態
             if (!gameRunning) return; 
             currentType = t; 
             document.querySelectorAll('.shop-btn').forEach(b => b.classList.remove('selected')); 
@@ -102,11 +97,7 @@
             gameRunning = true; currentMap = mapLayoutOrig.map(row => [...row]); 
             document.getElementById('start-screen').classList.add('hidden'); 
             document.getElementById('difficultyInfo').innerText = difficultyTip;
-            
-            // 遊戲開始後才預設選中機槍塔
-            selectType('gun'); 
-            
-            startNextWave(); gameLoop(); 
+            selectType('gun'); startNextWave(); gameLoop(); 
         }
 
         function startNextWave() { enemiesToSpawn = (currentWave % 5 === 0) ? 1 : 5 + Math.floor(currentWave * 1.5); spawnTimer = 0; waveInProgress = true; }
@@ -118,14 +109,32 @@
                 this.maxHp = Math.floor((isBoss ? 600 : 25) * Math.pow(hpGrowthRate, currentWave - 1));
                 this.hp = this.maxHp; this.speed = isBoss ? 0.6 : 1.3; 
                 this.slowTimer = 0; this.slowPower = 0; 
-                this.isEnraged = false; this.freezeTimer = 0;
+                this.isEnraged = false; this.hasEnraged = false; this.enrageImmuneTimer = 0; this.freezeTimer = 0;
             }
             update() {
                 let currentSpeed = this.speed;
-                if (this.isBoss && this.hp < this.maxHp * 0.3) { currentSpeed *= 1.5; this.isEnraged = true; } 
+                // 狂暴觸發檢查
+                if (this.isBoss && this.hp < this.maxHp * 0.3 && !this.hasEnraged) {
+                    this.isEnraged = true;
+                    this.hasEnraged = true;
+                    this.slowTimer = 0; // 立即清除緩速
+                    this.slowPower = 0;
+                    this.enrageImmuneTimer = 90; // 1.5秒霸體 (1.5 * 60fps)
+                }
+
+                if (this.isEnraged) currentSpeed *= 1.5;
+
+                // 霸體邏輯
+                if (this.enrageImmuneTimer > 0) {
+                    this.enrageImmuneTimer--;
+                    this.slowTimer = 0; // 霸體期間無法被緩速
+                }
+
                 let effectiveSlow = (this.slowTimer > 0) ? Math.min(this.slowPower, this.isBoss ? 0.50 : 0.75) : 0;
                 if (this.slowTimer > 0) this.slowTimer--; else this.slowPower = 0;
+                
                 let s = currentSpeed * (1 - effectiveSlow);
+                
                 if(this.isBoss && towers.length > 0) {
                     this.freezeTimer++;
                     let triggerTime = this.isEnraged ? 120 : 240;
@@ -142,7 +151,8 @@
                 ctx.fillStyle = '#2ecc71'; ctx.fillRect(this.x+5, this.y - 10, Math.max(0, 30 * (this.hp / this.maxHp)), 4);
                 ctx.fillStyle = this.isBoss ? (this.isEnraged ? '#e74c3c' : '#8e44ad') : '#c0392b';
                 ctx.beginPath(); ctx.arc(this.x + 20, this.y + 20, this.isBoss?18:10, 0, Math.PI*2); ctx.fill();
-                if (this.isEnraged) { ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 2; ctx.stroke(); }
+                if (this.enrageImmuneTimer > 0) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.stroke(); } // 霸體視覺
+                else if (this.isEnraged) { ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 2; ctx.stroke(); }
                 if (this.slowTimer > 0) { ctx.strokeStyle = '#3498db'; ctx.lineWidth = 2; ctx.stroke(); }
             }
         }
@@ -195,16 +205,13 @@
         class Friend { 
             constructor(d, lvl){
                 this.x=path[path.length-1].x*tileSize; this.y=path[path.length-1].y*tileSize;
-                this.tIdx=path.length-2; this.d=d; 
-                this.radius = Math.min(18, 7 + (lvl - 1) * 1.5);
+                this.tIdx=path.length-2; this.d=d; this.radius = Math.min(18, 7 + (lvl - 1) * 1.5);
             } 
             update(){
                 let t=path[this.tIdx],dx=t.x*tileSize-this.x,dy=t.y*tileSize-this.y,dist=Math.sqrt(dx*dx+dy*dy);
                 if(dist<2){this.tIdx--; if(this.tIdx<0)return true;}
                 else{this.x+=(dx/dist)*2; this.y+=(dy/dist)*2;}
-                for(let e of enemies){
-                    if(Math.hypot(this.x-e.x,this.y-e.y) < (this.radius + 15)){ e.hp-=this.d; return true; }
-                }
+                for(let e of enemies){ if(Math.hypot(this.x-e.x,this.y-e.y) < (this.radius + 15)){ e.hp-=this.d; return true; } }
                 return false;
             } 
             draw(){
