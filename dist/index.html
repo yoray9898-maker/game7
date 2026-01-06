@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>塔防：元素戰爭 - 狂暴射速版</title>
+    <title>塔防：元素戰爭 - UI 優化版</title>
     <style>
         body { display: flex; flex-direction: column; align-items: center; background-color: #2c3e50; color: white; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; overflow: hidden; }
         #game-container { position: relative; margin-top: 10px; }
@@ -69,7 +69,7 @@
             <span id="towerInfo" style="font-weight: bold; color: #fff;"></span>
             <button id="upgradeBtn" style="background:#f1c40f; color:#2c3e50" onclick="upgradeSelectedTower()">升級 ($<span id="upgradeCost"></span>)</button>
             <button class="btn-sell" onclick="sellSelectedTower()">賣出 ($<span id="sellValue"></span>)</button>
-            <button style="background:#bdc3c7; color:#2c3e50" onclick="deselectTower()">取消</button>
+            <button style="background:#bdc3c7; color:#2c3e50" onclick="deselectTower()">關閉</button>
         </div>
     </div>
 
@@ -155,13 +155,11 @@
                 let cost = this.getUpgradeCost(); 
                 this.totalSpent += cost; 
                 this.level++; 
-                
                 if (this.type === 'summon') {
                     this.damage = Math.floor(this.damage * 1.8);
                     this.cdMax = Math.max(150, this.cdMax - 60); 
                 } else {
                     this.damage = Math.floor(this.damage * 1.7); 
-                    // 射速提升 115% -> 冷卻幀數變為 1/1.15 (~0.87)
                     this.cdMax = Math.max(2, Math.floor(this.cdMax * 0.87)); 
                 }
                 this.range += 10; 
@@ -192,12 +190,38 @@
             const rect = canvas.getBoundingClientRect();
             const gx = Math.floor((e.clientX - rect.left)/tileSize), gy = Math.floor((e.clientY-rect.top)/tileSize);
             const t = towers.find(t=>t.x===gx*tileSize && t.y===gy*tileSize);
-            if(t) { selectedTower = t; document.getElementById('shop').style.display='none'; document.getElementById('upgradeMenu').style.display='flex'; document.getElementById('towerInfo').innerText="Lv."+t.level; document.getElementById('upgradeCost').innerText=t.getUpgradeCost(); document.getElementById('sellValue').innerText=Math.floor(t.totalSpent*0.5); }
-            else { deselectTower(); const costs={gun:50,ice:80,bomb:120,summon:150}; if(gx < 15 && gy < 10 && currentMap[gy][gx]===0 && money>=costs[currentType]){ money-=costs[currentType]; towers.push(new Tower(gx*tileSize,gy*tileSize,currentType)); currentMap[gy][gx]=2; } }
+            if(t) { 
+                selectedTower = t; 
+                document.getElementById('shop').style.display='none'; 
+                document.getElementById('upgradeMenu').style.display='flex'; 
+                document.getElementById('towerInfo').innerText="Lv."+t.level; 
+                document.getElementById('upgradeCost').innerText=t.getUpgradeCost(); 
+                document.getElementById('sellValue').innerText=Math.floor(t.totalSpent*0.5); 
+            }
+            else { 
+                deselectTower(); 
+                const costs={gun:50,ice:80,bomb:120,summon:150}; 
+                if(gx < 15 && gy < 10 && currentMap[gy][gx]===0 && money>=costs[currentType]){ 
+                    money-=costs[currentType]; 
+                    towers.push(new Tower(gx*tileSize,gy*tileSize,currentType)); 
+                    currentMap[gy][gx]=2; 
+                } 
+            }
         });
 
         function deselectTower() { selectedTower=null; document.getElementById('shop').style.display='block'; document.getElementById('upgradeMenu').style.display='none'; document.getElementById('difficultyInfo').innerText = difficultyTip; }
-        function upgradeSelectedTower() { if(money>=selectedTower.getUpgradeCost()){ money-=selectedTower.getUpgradeCost(); selectedTower.upgrade(); deselectTower(); } }
+        
+        function upgradeSelectedTower() { 
+            if(money >= selectedTower.getUpgradeCost()){ 
+                money -= selectedTower.getUpgradeCost(); 
+                selectedTower.upgrade(); 
+                // 升級後不消失介面，而是刷新數據
+                document.getElementById('towerInfo').innerText = "Lv." + selectedTower.level;
+                document.getElementById('upgradeCost').innerText = selectedTower.getUpgradeCost();
+                document.getElementById('sellValue').innerText = Math.floor(selectedTower.totalSpent * 0.5);
+            } 
+        }
+
         function sellSelectedTower() { currentMap[selectedTower.y/tileSize][selectedTower.x/tileSize]=0; money+=Math.floor(selectedTower.totalSpent*0.5); towers=towers.filter(t=>t!==selectedTower); deselectTower(); }
 
         function gameLoop() {
