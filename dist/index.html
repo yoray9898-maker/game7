@@ -2,54 +2,66 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>塔防：元素戰爭 - BOSS戰利品版</title>
+    <title>塔防：元素戰爭 - 最終完美版</title>
     <style>
         * { -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
         body { display: flex; flex-direction: column; align-items: center; background-color: #2c3e50; color: white; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding-top: 20px; }
         
+        /* 頂部資訊欄 */
         .ui-panel { padding: 15px 25px; background: #34495e; border-radius: 8px; display: flex; gap: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); min-width: 600px; justify-content: center; margin-bottom: 15px; }
         .stat-box { display: flex; flex-direction: column; align-items: center; }
         .label { font-size: 0.8em; color: #bdc3c7; }
         .stat { font-size: 1.4em; color: #f1c40f; font-weight: bold; }
         
-        #game-container { position: relative; }
+        #game-container { position: relative; width: 612px; height: 412px; }
         canvas { background-color: #ecf0f1; border: 6px solid #34495e; border-radius: 8px; cursor: crosshair; }
 
-        /* 經典難度介面 */
+        /* --- 核心修正：還原爆擊版難度選擇介面 --- */
         .overlay { 
-            position: absolute; top: 0; left: 0; width: 612px; height: 412px; 
-            background: rgba(28, 40, 51, 0.98); 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(20, 30, 40, 0.95); 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             border-radius: 4px; z-index: 100; 
         }
-        .difficulty-menu { display: flex; flex-direction: column; gap: 15px; width: 320px; }
-        .btn-diff { 
-            width: 100%; padding: 15px 20px; color: white; border-radius: 12px; 
-            cursor: pointer; border: none; font-weight: bold; transition: 0.2s;
-            text-align: left; box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-        }
-        .btn-diff:active { transform: translateY(3px); box-shadow: none; }
-        .btn-diff .title { display: block; font-size: 1.2em; margin-bottom: 2px; }
-        .btn-diff .desc { display: block; font-size: 0.75em; font-weight: normal; opacity: 0.85; }
         
-        .easy { background: #27ae60; } 
-        .normal { background: #2980b9; } 
-        .hard { background: #c0392b; border: 1px solid #f1c40f; }
+        .difficulty-title { 
+            color: #f1c40f; font-size: 2em; margin-bottom: 30px; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); letter-spacing: 2px;
+        }
 
-        /* 商店按鈕 */
+        .difficulty-menu { display: flex; flex-direction: column; gap: 20px; width: 380px; }
+
+        .btn-diff { 
+            width: 100%; padding: 18px 25px; color: white; border-radius: 15px; 
+            cursor: pointer; border: none; font-weight: bold; transition: all 0.2s;
+            text-align: left; position: relative;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.3);
+            display: flex; flex-direction: column;
+        }
+        
+        .btn-diff:hover { transform: translateY(-2px); box-shadow: 0 8px 0 rgba(0,0,0,0.3); }
+        .btn-diff:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+        
+        .btn-diff .title { font-size: 1.4em; margin-bottom: 4px; display: block; }
+        .btn-diff .desc { font-size: 0.85em; font-weight: normal; opacity: 0.9; line-height: 1.4; }
+        
+        .easy { background: linear-gradient(135deg, #27ae60, #2ecc71); border-left: 8px solid #1e8449; } 
+        .normal { background: linear-gradient(135deg, #2980b9, #3498db); border-left: 8px solid #21618c; } 
+        .hard { background: linear-gradient(135deg, #c0392b, #e74c3c); border-left: 8px solid #7b241c; border: 1px solid #f1c40f; }
+
+        /* 商店按鈕樣式 */
         .controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; justify-content: center; }
         .shop-btn { padding: 12px 18px; cursor: pointer; border: 3px solid transparent; border-radius: 10px; color: white; font-weight: bold; transition: all 0.2s; position: relative; }
         .shop-btn.selected { border-color: #f1c40f !important; transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         
-        /* 核彈按鈕與右上角圓圈 */
         .nuke-btn { background: #e74c3c; border: 2px solid #c0392b; }
         .nuke-badge {
-            position: absolute; top: -8px; right: -8px;
+            position: absolute; top: -10px; right: -10px;
             background: #f1c40f; color: #2c3e50;
-            width: 24px; height: 24px; border-radius: 50%;
+            width: 26px; height: 26px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: bold; border: 2px solid #2c3e50;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-size: 14px; font-weight: bold; border: 2px solid #2c3e50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
         }
 
         #upgradeMenu { background: #8e44ad; padding: 10px 20px; border-radius: 8px; display: none; gap: 15px; align-items: center; border: 2px solid #f1c40f; }
@@ -66,19 +78,19 @@
 
     <div id="game-container">
         <div id="start-screen" class="overlay">
-            <h2 style="color: #f1c40f; margin-bottom: 25px; font-size: 1.8em;">選擇難度開始</h2>
+            <h2 class="difficulty-title">選擇作戰難度</h2>
             <div class="difficulty-menu">
                 <button class="btn-diff easy" onclick="startGame(1.25, '簡單', 1.0)">
                     <span class="title">簡單模式</span>
-                    <span class="desc">擊敗BOSS有50%機率獲得核彈</span>
+                    <span class="desc">敵軍血量成長緩慢。擊敗 BOSS 有 50% 機率獲得核彈。</span>
                 </button>
                 <button class="btn-diff normal" onclick="startGame(1.30, '普通', 1.2)">
                     <span class="title">普通模式</span>
-                    <span class="desc">標準平衡 / 核彈使用需 $500</span>
+                    <span class="desc">標準平衡體驗。核彈是保命關鍵，使用需支付 $500。</span>
                 </button>
                 <button class="btn-diff hard" onclick="startGame(1.40, '困難', 1.4)">
                     <span class="title">困難模式</span>
-                    <span class="desc">極限挑戰 / 核彈是翻盤關鍵</span>
+                    <span class="desc">極限生存挑戰！強大的敵軍與更豐厚的金錢回報。</span>
                 </button>
             </div>
         </div>
@@ -108,6 +120,7 @@
     </div>
 
     <script>
+        // --- 核心邏輯保持不變 ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
@@ -134,25 +147,16 @@
             document.getElementById('health').innerText = health;
             document.getElementById('waveDisplay').innerText = currentWave;
             document.getElementById('nuke-count').innerText = nukeInventory;
-            
             const nukeBtn = document.getElementById('btn-nuke');
-            // 只有在庫存 > 0 且 錢夠 $500 的時候才亮起
-            if (nukeInventory > 0 && money >= 500) {
-                nukeBtn.style.opacity = "1";
-                nukeBtn.style.cursor = "pointer";
-            } else {
-                nukeBtn.style.opacity = "0.4";
-                nukeBtn.style.cursor = "not-allowed";
-            }
+            if (nukeInventory > 0 && money >= 500) { nukeBtn.style.opacity = "1"; nukeBtn.style.cursor = "pointer"; } 
+            else { nukeBtn.style.opacity = "0.4"; nukeBtn.style.cursor = "not-allowed"; }
         }
 
         function useNuke() {
             if (nukeInventory > 0 && money >= 500) {
-                money -= 500;
-                nukeInventory--;
+                money -= 500; nukeInventory--;
                 enemies.forEach(e => e.applyDamage(e.hp));
-                ctx.fillStyle = "white";
-                ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = "white"; ctx.fillRect(0,0,600,400);
                 updateUI();
             }
         }
@@ -178,37 +182,20 @@
             }
         }
 
-        // 修改後的 Loop - 處理 BOSS 掉落核彈
         function gameLoop() {
             if(!gameRunning) return; ctx.clearRect(0,0,600,400);
             for(let y=0;y<10;y++) for(let x=0;x<15;x++) { ctx.fillStyle=mapLayout[y][x]===1?'#d35400':'#27ae60'; ctx.fillRect(x*40, y*40, 40, 40); }
-            
             if(waveInProgress) {
-                if(++spawnTimer > 45 && enemiesToSpawn > 0) {
-                    enemies.push(new Enemy(currentWave % 5 === 0));
-                    enemiesToSpawn--; spawnTimer=0;
-                } else if(enemiesToSpawn === 0 && enemies.length === 0) {
-                    waveInProgress=false; currentWave++; setTimeout(startNextWave, 2000);
-                }
+                if(++spawnTimer > 45 && enemiesToSpawn > 0) { enemies.push(new Enemy(currentWave % 5 === 0)); enemiesToSpawn--; spawnTimer=0; } 
+                else if(enemiesToSpawn === 0 && enemies.length === 0) { waveInProgress=false; currentWave++; setTimeout(startNextWave, 2000); }
             }
-
             for(let i=enemies.length-1; i>=0; i--) {
                 let e = enemies[i]; e.update(); e.draw();
                 if(e.hp<=0) {
-                    // 如果擊敗的是 BOSS
-                    if(e.isBoss) {
-                        if(Math.random() < 0.5) { // 50% 機率
-                            nukeInventory++;
-                            // 簡單的小文字提示（可選）
-                            console.log("獲得核彈戰利品！");
-                        }
-                    }
-                    money += (e.isBoss ? 150 : 20) * moneyBonus;
-                    enemies.splice(i,1); updateUI();
+                    if(e.isBoss && Math.random() < 0.5) nukeInventory++;
+                    money += (e.isBoss ? 150 : 20) * moneyBonus; enemies.splice(i,1); updateUI();
                 }
             }
-
-            // (其餘繪製邏輯維持不變...)
             towers.forEach(t=> { t.update ? t.update() : null; t.draw(); });
             bullets = bullets.filter(b => {
                 let dx = b.target.x+20-b.x, dy = b.target.y+20-b.y, d = Math.sqrt(dx*dx+dy*dy);
@@ -218,12 +205,10 @@
             });
             traps = traps.filter(tr => { ctx.fillStyle = "rgba(44, 62, 80, 0.8)"; ctx.fillRect(tr.x+10, tr.y+10, 20, 20); let target = enemies.find(e => Math.hypot(e.x+20-(tr.x+20), e.y+20-(tr.y+20)) < 25); if(target) { target.applyDamage(tr.dmg); return false; } return true; });
             friends = friends.filter(f => { let t=path[f.tIdx], dx=t.x*40-f.x, dy=t.y*40-f.y, d=Math.sqrt(dx*dx+dy*dy); if(d<3){ f.tIdx--; if(f.tIdx<0) return false; } else { f.x+=(dx/d)*2.5; f.y+=(dy/d)*2.5; } let e = enemies.find(en => Math.hypot(f.x-en.x, f.y-en.y)<30); if(e) { e.applyDamage(f.dmg); return false; } ctx.fillStyle="#2ecc71"; ctx.beginPath(); ctx.arc(f.x+20, f.y+20, 8, 0, Math.PI*2); ctx.fill(); return true; });
-
             if(health <= 0) { alert("失敗！波次："+currentWave); location.reload(); }
             requestAnimationFrame(gameLoop);
         }
 
-        // 輔助函數：初始化塔
         class Tower {
             constructor(x,y,type) {
                 this.x=x; this.y=y; this.type=type; this.level=1; this.cd=0;
@@ -271,9 +256,6 @@
         function upgradeSelectedTower() { if(!selectedTower) return; let c = selectedTower.getCost(); if(money >= c) { money -= c; selectedTower.level++; selectedTower.dmg *= 1.7; updateUI(); showUpgradeMenu(); } }
         function sellSelectedTower() { if(!selectedTower) return; mapLayout[selectedTower.y/40][selectedTower.x/40]=0; money += 30; towers = towers.filter(t => t !== selectedTower); deselectTower(); updateUI(); }
         function startNextWave() { enemiesToSpawn = 5 + Math.floor(currentWave * 1.5); spawnTimer = 0; waveInProgress = true; }
-        
-        // 初始 UI 更新
-        updateUI();
     </script>
 </body>
 </html>
