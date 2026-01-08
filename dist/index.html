@@ -2,9 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>元素戰爭：寒冰禁區 - 策略強化版</title>
+    <title>元素戰爭：終極進化版</title>
     <style>
-        /* 保持原有的 CSS 樣式，此處省略以節省篇幅，內容同前次回答 */
         * { -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
         body { display: flex; flex-direction: column; align-items: center; background-color: #2c3e50; color: white; font-family: 'Microsoft JhengHei', Arial, sans-serif; margin: 0; padding-top: 15px; overflow: hidden; }
         .ui-panel { display: flex; justify-content: space-between; background: #34495e; padding: 15px 25px; width: 610px; border-radius: 4px; margin-bottom: 15px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
@@ -13,13 +12,21 @@
         .stat { font-size: 1.2em; font-weight: bold; color: #f1c40f; }
         #game-container { position: relative; width: 612px; height: 412px; }
         canvas { background-color: #ecf0f1; border: 6px solid #34495e; border-radius: 4px; display: block; touch-action: none; cursor: crosshair; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; border-radius: 4px; }
-        .overlay h1 { color: #f1c40f; margin-bottom: 25px; font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); font-weight: bold; }
+        
+        /* 恢復帶有提示的難度選擇介面 */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; border-radius: 4px; text-align: center; }
+        .overlay h1 { color: #f1c40f; margin-bottom: 10px; font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .overlay p { color: #bdc3c7; margin-bottom: 25px; font-size: 0.9em; }
+        .diff-btn { width: 220px; padding: 12px; margin: 5px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .diff-btn:hover { transform: scale(1.05); }
+        .diff-hint { display: block; font-size: 0.7em; font-weight: normal; opacity: 0.8; }
+
         .controls { margin-top: 15px; display: flex; justify-content: space-between; width: 610px; background: #34495e; padding: 10px; border-radius: 4px; gap: 8px; }
         .shop-btn { flex: 1; padding: 12px 0; cursor: pointer; border: 2px solid transparent; border-radius: 4px; color: white; font-weight: bold; font-size: 0.8em; text-align: center; position: relative; transition: all 0.2s; }
-        .shop-btn.selected { border: 2px solid #f1c40f !important; transform: translateY(-8px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .shop-btn.selected { border: 2px solid #f1c40f !important; transform: translateY(-5px); background: #2c3e50 !important; }
         .nuke-btn { background: #c0392b; border: 2px solid #e74c3c; flex: 1.2; }
-        .nuke-badge { position: absolute; top: -10px; right: -10px; background: #f1c40f; color: #2c3e50; width: 26px; height: 26px; border-radius: 50%; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid #2c3e50; }
+        .nuke-badge { position: absolute; top: -10px; right: -10px; background: #f1c40f; color: #2c3e50; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid #2c3e50; }
+        
         #upgradeMenu { background: #8e44ad; padding: 10px 20px; border-radius: 30px; display: none; gap: 15px; align-items: center; border: 2px solid #f1c40f; margin-top: 15px; }
         .hidden { display: none !important; }
     </style>
@@ -35,12 +42,17 @@
 
     <div id="game-container">
         <div id="start-screen" class="overlay">
-            <h1>元素戰爭：寒冰禁區</h1>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <button style="background:#2ecc71; padding:15px; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="startGame(1.25, '簡單')">簡單模式</button>
-                <button style="background:#3498db; padding:15px; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="startGame(1.30, '普通')">普通模式</button>
-                <button style="background:#e74c3c; padding:15px; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="startGame(1.40, '困難')">困難模式</button>
-            </div>
+            <h1>元素戰爭：核彈末日</h1>
+            <p>選擇難度以開始遊戲（HP 隨波次成長）</p>
+            <button class="diff-btn" style="background:#2ecc71;" onclick="startGame(1.25, '簡單')">
+                簡單模式 <span class="diff-hint">HP 成長 1.25x / 適合新手</span>
+            </button>
+            <button class="diff-btn" style="background:#3498db;" onclick="startGame(1.30, '普通')">
+                普通模式 <span class="diff-hint">HP 成長 1.30x / 標準挑戰</span>
+            </button>
+            <button class="diff-btn" style="background:#e74c3c;" onclick="startGame(1.40, '困難')">
+                困難模式 <span class="diff-hint">HP 成長 1.40x / 極度硬核</span>
+            </button>
         </div>
         <canvas id="gameCanvas" width="600" height="400"></canvas>
     </div>
@@ -62,14 +74,15 @@
     </div>
 
     <script>
-        // 核心邏輯整合（僅列出變動較大部分，其餘與前次相同）
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let money = 200, health = 20, currentWave = 1, gameRunning = false;
-        let towers = [], enemies = [], bullets = [], minions = [], damageTexts = [], traps = [], shockwaves = [];
-        let currentType = null, selectedTower = null, nukeCount = 0, nukeFlash = 0;
+        let nukeCount = 0, currentDifficulty = '', nukeFlash = 0, shockwaves = [];
+        let towers = [], enemies = [], bullets = [], minions = [], damageTexts = [], traps = [];
+        let currentType = null, selectedTower = null, isPressing = false, mouseHoverPos = {x:-1, y:-1};
         let hpGrowth = 1.3, enemiesToSpawn = 0, spawnTimer = 0, waveInProgress = false;
 
+        // 地圖與路徑
         const pathPoints = [{x:0,y:1},{x:4,y:1},{x:4,y:4},{x:2,y:4},{x:2,y:6},{x:7,y:6},{x:7,y:2},{x:13,y:2},{x:13,y:5},{x:10,y:5},{x:10,y:7},{x:14,y:7}];
         const mapLayout = [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,1,1,1,1,1,1,1,0],[0,0,0,0,1,0,0,1,0,0,0,0,0,1,0],[0,0,1,1,1,0,0,1,0,0,0,0,0,1,0],[0,0,1,0,0,0,0,1,0,0,1,1,1,1,0],[0,0,1,1,1,1,1,1,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
         const roadTiles = [];
@@ -80,7 +93,21 @@
             bomb:[170,60,65,'#d35400',120], summon:[150,150,360,'#f1c40f',150], trap:[0,25,300,'#7f8c8d',150] 
         };
 
-        // ... (省略 Enemy 類與基礎函數，邏輯同上)
+        function startGame(rate, name) {
+            hpGrowth = rate; 
+            currentDifficulty = name;
+            money = 200; health = 20; currentWave = 1;
+            towers = []; enemies = []; bullets = []; minions = []; traps = []; shockwaves = [];
+            enemiesToSpawn = 5; // 初始敵人數量
+            waveInProgress = true;
+            gameRunning = true;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('diffInfo').innerText = name;
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- 核心 Enemy 類 ---
         class Enemy {
             constructor(wave) {
                 this.x = pathPoints[0].x*40; this.y = pathPoints[0].y*40; this.tIdx = 1;
@@ -96,91 +123,205 @@
                     if(this.hp / this.maxHp < 0.3 && !this.isEnraged) {
                         this.isEnraged = true; this.baseSpeed *= 2; this.unstopTimer = 150; 
                         this.currentSlow = 0; this.stunTimer = 0;
+                        addDmgText(this.x, this.y, "狂暴!", "red", true);
+                    }
+                    if(++this.freezeTimer >= (this.isEnraged ? 120 : 240)) {
+                        this.freezeTimer = 0;
+                        if(towers.length > 0) {
+                            let rt = towers[Math.floor(Math.random()*towers.length)];
+                            rt.frozen = 180; addDmgText(rt.x, rt.y, "冰凍!", "#3498db");
+                        }
                     }
                 }
                 if(this.unstopTimer > 0) { this.unstopTimer--; this.currentSlow = 0; this.stunTimer = 0; }
                 let speed = (this.stunTimer > 0) ? 0 : this.baseSpeed * (1 - this.currentSlow);
-                let target = pathPoints[this.tIdx], dx = target.x*40-this.x, dy = target.y*40-this.y, d = Math.sqrt(dx*dx+dy*dy);
-                if(d < speed) { this.tIdx++; }
-                else if (speed > 0) { this.x += (dx/d)*speed; this.y += (dy/d)*speed; }
-                // 緩速衰減改慢，讓持續攻擊更有意義
+                let target = pathPoints[this.tIdx];
+                let dx = target.x*40-this.x, dy = target.y*40-this.y, dist = Math.sqrt(dx*dx+dy*dy);
+                if(dist < speed) { this.tIdx++; if(this.tIdx>=pathPoints.length){ health--; this.hp=0; updateUI(); } }
+                else if (speed > 0) { this.x += (dx/dist)*speed; this.y += (dy/dist)*speed; }
                 this.currentSlow *= 0.995; 
             }
             draw() {
                 ctx.fillStyle = "#000"; ctx.fillRect(this.x+5, this.y-8, 30, 5);
                 ctx.fillStyle = "#2ecc71"; ctx.fillRect(this.x+5, this.y-8, 30*(this.hp/this.maxHp), 5);
-                let bodyColor = this.isBoss ? (this.isEnraged ? "#ff4757" : "#8e44ad") : "#c0392b";
-                if(this.flash > 0) bodyColor = (this.hitType === "crit") ? "#ff6b6b" : "white";
-                if(this.stunTimer > 0) bodyColor = "#f1c40f";
-                ctx.fillStyle = bodyColor;
-                ctx.beginPath(); ctx.arc(this.x+20, this.y+20, this.isBoss?18:12, 0, Math.PI*2); ctx.fill();
+                let color = this.isBoss ? (this.isEnraged ? "#ff4757" : "#8e44ad") : "#c0392b";
+                if(this.flash > 0) color = (this.hitType === "crit") ? "#ff6b6b" : "white";
+                if(this.stunTimer > 0) color = "#f1c40f";
+                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(this.x+20, this.y+20, this.isBoss?18:12, 0, Math.PI*2); ctx.fill();
             }
         }
 
-        // 修改後的子彈命中邏輯
         function gameLoop() {
             if(!gameRunning) return;
             ctx.clearRect(0,0,600,400);
-            for(let y=0;y<10;y++) for(let x=0;x<15;x++){ ctx.fillStyle=mapLayout[y][x]===1?'#d35400':'#27ae60'; ctx.fillRect(x*40, y*40, 40, 40); }
-            
-            // ... (省略中間的渲染與陷阱邏輯)
 
+            // 繪製地圖
+            for(let y=0;y<10;y++) for(let x=0;x<15;x++){ ctx.fillStyle=mapLayout[y][x]===1?'#d35400':'#27ae60'; ctx.fillRect(x*40, y*40, 40, 40); }
+
+            // 預覽範圍
+            if(selectedTower) drawRange(selectedTower.x+20, selectedTower.y+20, selectedTower.range);
+            else if(currentType) drawRange(mouseHoverPos.x*40+20, mouseHoverPos.y*40+20, towerProps[currentType][0]);
+
+            // 震盪波
+            shockwaves = shockwaves.filter(s => {
+                s.r += 4; s.life--;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                ctx.strokeStyle = `rgba(211, 84, 0, ${s.life/20})`; ctx.stroke();
+                return s.life > 0;
+            });
+
+            // 敵人生成
+            if(waveInProgress && enemiesToSpawn > 0) {
+                if(++spawnTimer > 60) { enemies.push(new Enemy(currentWave)); enemiesToSpawn--; spawnTimer=0; }
+            } else if (enemies.length === 0 && waveInProgress) {
+                waveInProgress = false;
+                setTimeout(() => { currentWave++; enemiesToSpawn = 5+currentWave; waveInProgress=true; updateUI(); }, 2000);
+            }
+
+            // 塔攻擊
+            towers.forEach(t => {
+                if(t.frozen > 0) { t.frozen--; ctx.globalAlpha=0.5; }
+                ctx.fillStyle = t.color; ctx.fillRect(t.x+2, t.y+2, 36, 36);
+                ctx.globalAlpha=1.0; ctx.fillStyle="white"; ctx.fillText("L"+t.level, t.x+20, t.y+22);
+
+                if(t.frozen <= 0 && --t.cd <= 0) {
+                    let target = enemies.find(e => Math.hypot(e.x+20-(t.x+20), e.y+20-(t.y+20)) < t.range);
+                    if(target) { bullets.push({x:t.x+20, y:t.y+20, target, dmg:t.dmg, tower:t}); t.cd = t.cdMax; }
+                }
+            });
+
+            // 子彈邏輯
             bullets = bullets.filter(b => {
                 let dx = b.target.x+20-b.x, dy = b.target.y+20-b.y, dist = Math.sqrt(dx*dx+dy*dy);
-                if(dist < 15) { 
-                    let finalDmg = b.dmg;
-                    let isCritHit = false;
-
-                    // 機槍塔爆擊
-                    if(b.tower.type === 'gun' && b.tower.level >= 3) {
-                        if(Math.random() < b.tower.critChance) { finalDmg *= (1 + b.tower.critBonus); isCritHit = true; }
+                if(dist < 15) {
+                    let fdmg = b.dmg; let isCrit = false;
+                    // 機槍爆擊
+                    if(b.tower.type==='gun' && b.tower.level>=3 && Math.random()<b.tower.critChance) { fdmg*=(1+b.tower.critBonus); isCrit=true; }
+                    // 寒冰緩速
+                    if(b.tower.type==='ice') {
+                        let base = 0.5 + (b.tower.level-1)*0.02;
+                        let eff = b.target.isBoss ? base/2 : base;
+                        b.target.currentSlow = b.target.currentSlow === 0 ? eff : Math.min(b.target.isBoss?0.5:0.75, b.target.currentSlow + eff*0.02);
                     }
-
-                    // 寒冰塔：新緩速邏輯
-                    if(b.tower.type === 'ice') {
-                        if(b.target.unstopTimer <= 0) {
-                            let towerSlowAttr = 0.50 + (b.tower.level - 1) * 0.02; // 每級+2%
-                            let effectiveSlow = b.target.isBoss ? (towerSlowAttr / 2) : towerSlowAttr; // Boss 效果減半
-                            
-                            if(b.target.currentSlow === 0) {
-                                b.target.currentSlow = effectiveSlow;
-                            } else {
-                                b.target.currentSlow += (effectiveSlow * 0.02); // 多塔堆疊 2%
+                    // 砲擊震盪
+                    if(b.tower.type==='bomb' && b.tower.level>=3) {
+                        shockwaves.push({x:b.target.x+20, y:b.target.y+20, r:10, life:20});
+                        enemies.forEach(e => {
+                            if(e!==b.target && Math.hypot(e.x-b.target.x, e.y-b.target.y)<b.tower.shockRange) {
+                                e.hp -= fdmg*b.tower.shockDmgRatio; e.stunTimer=30;
                             }
-                            // 上限判定
-                            let maxLimit = b.target.isBoss ? 0.50 : 0.75;
-                            if(b.target.currentSlow > maxLimit) b.target.currentSlow = maxLimit;
-                        }
-                        if(b.tower.level >= 3 && b.target.currentSlow > 0) finalDmg *= 1.4; // 碎冰加成
+                        });
                     }
-
-                    // 砲擊塔/召喚塔邏輯同前...
-                    b.target.hp -= finalDmg; b.target.flash = 6;
-                    b.target.hitType = isCritHit ? "crit" : "normal";
-                    addDmgText(b.target.x, b.target.y, Math.floor(finalDmg), isCritHit ? "#ff3f34" : "white", isCritHit);
-                    return false; 
+                    b.target.hp -= fdmg; b.target.flash=6; b.target.hitType = isCrit?"crit":"normal";
+                    addDmgText(b.target.x, b.target.y, Math.floor(fdmg), isCrit?"#ff3f34":"white", isCrit);
+                    return false;
                 }
-                b.x += (dx/dist)*10; b.y += (dy/dist)*10; 
-                ctx.fillStyle = b.tower.type === 'ice' ? "#3498db" : (b.tower.type === 'bomb' ? "#d35400" : "#f1c40f");
-                ctx.beginPath(); ctx.arc(b.x, b.y, b.tower.type==='bomb'?6:4, 0, Math.PI*2); ctx.fill(); 
+                b.x += (dx/dist)*10; b.y += (dy/dist)*10;
+                ctx.fillStyle = b.tower.color; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill();
                 return b.target.hp > 0;
             });
 
-            // ... (其餘循環代碼)
+            enemies = enemies.filter(e => {
+                e.update(); e.draw();
+                if(e.hp <= 0) { 
+                    money += e.isBoss ? (250+currentWave*50) : (15+currentWave*5);
+                    if(e.isBoss && Math.random()<0.5) nukeCount++;
+                    updateUI();
+                }
+                return e.hp > 0;
+            });
+
+            damageTexts = damageTexts.filter(t => {
+                t.y -= 1; t.life--; ctx.save(); ctx.globalAlpha = t.life/50;
+                ctx.fillStyle=t.color; ctx.font=`bold ${t.fontSize}px Arial`; ctx.textAlign="center";
+                ctx.fillText(t.text, t.x, t.y); ctx.restore(); return t.life > 0;
+            });
+
+            if(health <= 0) { alert("遊戲結束！"); location.reload(); }
             requestAnimationFrame(gameLoop);
         }
 
-        function startGame(rate, name) {
-            hpGrowth = rate; currentDifficulty = name;
-            document.getElementById('start-screen').classList.add('hidden');
-            gameRunning = true; waveInProgress = true; enemiesToSpawn = 5;
-            updateUI(); requestAnimationFrame(gameLoop);
+        // --- UI 控制 ---
+        function selectType(t) { 
+            currentType = t; 
+            deselectTower();
+            document.querySelectorAll('.shop-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-'+t).classList.add('selected');
         }
-        function updateUI() { document.getElementById('money').innerText = Math.floor(money); document.getElementById('health').innerText = health; document.getElementById('waveDisplay').innerText = currentWave; document.getElementById('nuke-count').innerText = nukeCount; }
-        function addDmgText(x, y, text, color, isCrit) { damageTexts.push({ x: x+Math.random()*20, y: y, text, color, life: 50, fontSize: isCrit?22:14 }); }
-        function selectType(t) { currentType = t; deselectTower(); }
-        function deselectTower() { selectedTower = null; document.getElementById('upgradeMenu').style.display = 'none'; }
-        // ... (省略其餘 UI 互動函數)
+
+        function deselectTower() { selectedTower = null; document.getElementById('upgradeMenu').style.display='none'; }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const cx = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const cy = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            return { x: Math.floor((cx - rect.left) / (rect.width/15)), y: Math.floor((cy - rect.top) / (rect.height/10)) };
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            const p = getPos(e);
+            const t = towers.find(t => Math.floor(t.x/40) === p.x && Math.floor(t.y/40) === p.y);
+            if(t) {
+                selectedTower = t;
+                document.getElementById('upgradeMenu').style.display='flex';
+                document.getElementById('towerInfo').innerText = t.type.toUpperCase() + " Lv." + t.level;
+                document.getElementById('upgradeCost').innerText = Math.floor(towerProps[t.type][4] * Math.pow(1.6, t.level));
+            } else if (currentType && money >= towerProps[currentType][4] && mapLayout[p.y][p.x] === 0) {
+                towers.push({
+                    x: p.x*40, y: p.y*40, type: currentType, level: 1, 
+                    range: towerProps[currentType][0], dmg: towerProps[currentType][1], 
+                    cd: 0, cdMax: towerProps[currentType][2], color: towerProps[currentType][3],
+                    frozen: 0, critChance: 0.2, critBonus: 0.5, shockRange: 80, shockDmgRatio: 0.3
+                });
+                money -= towerProps[currentType][4];
+                mapLayout[p.y][p.x] = 2;
+                updateUI();
+            }
+        });
+
+        canvas.addEventListener('pointermove', (e) => { const p = getPos(e); mouseHoverPos = p; });
+
+        function upgradeSelectedTower() {
+            let cost = Math.floor(towerProps[selectedTower.type][4] * Math.pow(1.6, selectedTower.level));
+            if(money >= cost) {
+                money -= cost; selectedTower.level++;
+                selectedTower.dmg *= 1.7; selectedTower.range += 15;
+                if(selectedTower.type === 'gun' && selectedTower.level > 3) { selectedTower.critChance += 0.05; selectedTower.critBonus += 0.1; }
+                updateUI(); deselectTower();
+            }
+        }
+
+        function sellSelectedTower() {
+            towers = towers.filter(t => t !== selectedTower);
+            mapLayout[Math.floor(selectedTower.y/40)][Math.floor(selectedTower.x/40)] = 0;
+            money += Math.floor(towerProps[selectedTower.type][4] * 0.6);
+            updateUI(); deselectTower();
+        }
+
+        function useNuke() {
+            if(nukeCount > 0 && money >= 500) {
+                money -= 500; nukeCount--;
+                enemies.forEach(e => { e.hp -= e.maxHp*0.7; addDmgText(e.x, e.y, "NUKE!", "yellow", true); });
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('money').innerText = Math.floor(money);
+            document.getElementById('health').innerText = health;
+            document.getElementById('waveDisplay').innerText = currentWave;
+            document.getElementById('nuke-count').innerText = nukeCount;
+        }
+
+        function drawRange(cx, cy, r) {
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.1)"; ctx.fill();
+            ctx.setLineDash([5, 5]); ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        function addDmgText(x, y, text, color, isCrit) {
+            damageTexts.push({ x: x+20, y: y, text, color, life: 50, fontSize: isCrit?20:14 });
+        }
     </script>
 </body>
 </html>
