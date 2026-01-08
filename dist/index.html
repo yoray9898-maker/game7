@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>元素戰爭 - 打擊感與範圍修復版</title>
+    <title>元素戰爭 - 最終修復版</title>
     <style>
         * { -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
         body { display: flex; flex-direction: column; align-items: center; background-color: #2c3e50; color: white; font-family: 'Microsoft JhengHei', Arial, sans-serif; margin: 0; padding-top: 15px; overflow: hidden; }
@@ -60,11 +60,11 @@
     </div>
 
     <div class="controls">
-        <button class="shop-btn" id="btn-gun" style="background:#2980b9" onclick="selectType('gun')">機槍 $50</button>
-        <button class="shop-btn" id="btn-ice" style="background:#3498db" onclick="selectType('ice')">寒冰 $80</button>
-        <button class="shop-btn" id="btn-bomb" style="background:#d35400" onclick="selectType('bomb')">砲擊 $120</button>
-        <button class="shop-btn" id="btn-summon" style="background:#f1c40f; color:#2c3e50" onclick="selectType('summon')">召喚 $150</button>
-        <button class="shop-btn" id="btn-trap" style="background:#7f8c8d" onclick="selectType('trap')">陷阱 $150</button>
+        <button class="shop-btn" id="btn-gun" style="background:#2980b9" onclick="selectType('gun')">機槍塔 $50</button>
+        <button class="shop-btn" id="btn-ice" style="background:#3498db" onclick="selectType('ice')">寒冰塔 $80</button>
+        <button class="shop-btn" id="btn-bomb" style="background:#d35400" onclick="selectType('bomb')">砲擊塔 $120</button>
+        <button class="shop-btn" id="btn-summon" style="background:#f1c40f; color:#2c3e50" onclick="selectType('summon')">召喚塔 $150</button>
+        <button class="shop-btn" id="btn-trap" style="background:#7f8c8d" onclick="selectType('trap')">陷阱塔 $150</button>
         <button class="shop-btn" id="btn-nuke" style="background:#34495e;" onclick="useNuke()">核彈 $500 <span id="nuke-count">(0)</span></button>
     </div>
 
@@ -85,6 +85,8 @@
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('diffInfo').innerText = name;
             gameRunning = true; waveInProgress = true; enemiesToSpawn = 5;
+            // 預設選取機槍塔
+            selectType('gun'); 
             updateUI(); requestAnimationFrame(gameLoop);
         }
 
@@ -117,7 +119,6 @@
                 ctx.fillStyle = "#000"; ctx.fillRect(this.x+5, this.y-8, 30, 5);
                 ctx.fillStyle = this.berserkActive ? "#ff3e3e" : "#2ecc71";
                 ctx.fillRect(this.x+5, this.y-8, 30*(this.hp/this.maxHp), 5);
-                // 命中變白特效邏輯
                 ctx.fillStyle = this.flash > 0 ? "white" : (this.isBoss ? "#8e44ad" : "#c0392b");
                 ctx.beginPath(); ctx.arc(this.x+20, this.y+20, this.isBoss?18:12, 0, Math.PI*2); ctx.fill();
             }
@@ -128,7 +129,6 @@
             ctx.clearRect(0,0,600,400);
             for(let y=0;y<10;y++) for(let x=0;x<15;x++){ ctx.fillStyle=mapLayout[y][x]===1?'#d35400':'#27ae60'; ctx.fillRect(x*40, y*40, 40, 40); }
 
-            // 繪製範圍 (選取塔或預覽)
             if(selectedTower) {
                 ctx.beginPath(); ctx.arc(selectedTower.x+20, selectedTower.y+20, selectedTower.range, 0, Math.PI*2);
                 ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; ctx.fill();
@@ -150,8 +150,15 @@
 
             bullets = bullets.filter(b => {
                 let dx = b.target.x+20-b.x, dy = b.target.y+20-b.y, d = Math.sqrt(dx*dx+dy*dy);
-                if(d<10) { b.target.hp -= b.dmg; b.target.flash = 6; return false; } // 設定閃爍幀數
-                b.x += (dx/d)*10; b.y += (dy/d)*10; ctx.fillStyle="#f1c40f"; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); return true;
+                // 修復扣血邏輯：碰撞檢測
+                if(d < 12) { 
+                    b.target.hp -= b.dmg; 
+                    b.target.flash = 6; 
+                    return false; 
+                }
+                b.x += (dx/d)*10; b.y += (dy/d)*10; 
+                ctx.fillStyle="#f1c40f"; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); 
+                return b.target.hp > 0; // 如果目標已經在途中死亡，清除子彈
             });
 
             if(waveInProgress && enemiesToSpawn > 0 && ++spawnTimer > 60) { enemies.push(new Enemy(currentWave)); enemiesToSpawn--; spawnTimer=0; }
